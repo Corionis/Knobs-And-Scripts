@@ -26,6 +26,7 @@ def banner():
 
 # ------- create -------
 # kas create [-g|--git|-h|--github] [-p|--private] [-u|--url url] [-n|--name username] [-t|--token token] [-r repo]
+# create --github --private --url https://github.com/Corionis --name Corionis --token 403bcc6e36124089eaed056b4cfe15b1a7609605 --repo Clavius
 def create():
     global archive, flavor, index, repo, url, versioned
 
@@ -44,8 +45,7 @@ def create():
         options = 'ghpu:n:t:r:'
         long_opts = ['git', 'github', 'private', 'url=', 'name=', 'token=', 'repo=']
         opts, args = getopt.getopt(sys.argv[index:], options, long_opts)
-    except getopt.GetoptError:
-        msg = getopt.error
+    except getopt.error as msg:
         print(f"ERROR: {msg}")
         sys.exit(1)
 
@@ -69,7 +69,7 @@ def create():
 
     # sanity checks
     if is_git and is_github:
-        print("ERROR: can only use --git or --github")
+        print("ERROR: can only use --git or --github, not both")
         sys.exit(2)
     if is_git or is_github:
         if len(url) == 0:
@@ -93,7 +93,7 @@ def create():
     # create the archive + repo directory
     archive = archive + os.sep + repo
     if not os.path.exists(archive):
-        # os.makedirs(archive, exist_ok=True)
+        os.makedirs(archive, exist_ok=True)
         print(f" + created archive directory: {archive}")
     else:
         print(f" = archive directory exists: {archive}")
@@ -198,7 +198,7 @@ if __name__ == '__main__':
         cmd = sys.argv[index]
         index += 1
 
-        # read the configuration
+        # read the .kas configuration
         file = cfg.find(base)
         if len(file) > 0:
             kas = cfg.get(file)
@@ -209,7 +209,7 @@ if __name__ == '__main__':
             print(f" = archive directory: {archive}")
         else:
             if not cmd == 'setup':
-                print("ERROR: configuration file .kas cannot be found. Use setup command")
+                print("ERROR: configuration file .kas cannot be found. Use: kas setup [directory]")
                 sys.exit(1)
 
         # vcs commands -------
