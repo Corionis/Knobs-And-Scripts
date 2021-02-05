@@ -1,10 +1,11 @@
 # KAS : Knobs And Scripts
 
-from datetime import datetime
 import getopt
 import getpass
 import os
+import pwd
 import sys
+from datetime import datetime
 
 import cfg
 
@@ -14,7 +15,7 @@ global base  # directory of this executable
 global flavor  # type of vcs, if any
 global index  # sys.argv index
 global repo  # the specific fileset location, with or without a vcs
-global url # the url of the optional vcs
+global url  # the url of the optional vcs
 global version  # this executable version
 global versioned  # is a vcs being used, True/False
 
@@ -53,19 +54,22 @@ def create():
         if opt in ('-g', '--git'):
             flavor = 'git'
             is_git = True
-        if opt in ('-h', '--github'):
+        elif opt in ('-h', '--github'):
             flavor = 'github'
             is_github = True
-        if opt in ('-p', '--private'):
+        elif opt in ('-p', '--private'):
             is_private = True
-        if opt in ('-u', '--url'):
+        elif opt in ('-u', '--url'):
             url = arg
-        if opt in ('-n', '--name'):
+        elif opt in ('-n', '--name'):
             name = arg
-        if opt in ('-t', '--token'):
+        elif opt in ('-t', '--token'):
             token = arg
-        if opt in ('-r', '--repo'):
+        elif opt in ('-r', '--repo'):
             repo = arg
+        else:
+            print(f"ERROR: unknown create option: " + opt)
+            sys.exit(2)
 
     # sanity checks
     if is_git and is_github:
@@ -91,38 +95,73 @@ def create():
         print(f" ! repo name not specified, using default: {repo}")
 
     # create the archive + repo directory
-    archive = archive + os.sep + repo
-    if not os.path.exists(archive):
-        os.makedirs(archive, exist_ok=True)
-        print(f" + created archive directory: {archive}")
+    target = archive + os.sep + repo
+    if not os.path.exists(target):
+        os.makedirs(target, exist_ok=True)
+        print(f" + created archive directory: {target}")
     else:
-        print(f" = archive directory exists: {archive}")
+        print(f" = archive directory exists: {target}")
 
     # create the git or github repo
     if versioned:
         print(f" = vcs type: {flavor}")
         vcs.create(archive, repo, flavor, url, name, token, is_private)
 
-    # create the metadata file
-    # now = datetime.now()
-    # stamp = now.strftime("%d %M %y %H:%M:%S")
-    # meta = f"# KAS repo {repo}" \
-    #        f"# Created: {stamp} by {getpass.getuser()}" \
-    #        f"repo = {repo}" \
-    #        f"flavor = {flavor}" \
-    #        f"url = {url}" \
-    #        f"user = {name}" \
-    #        f"token = {token}" \
-    #        f"private = {is_private}"
-    #
-    # keep = archive + os.sep + repo + '.yaml'
-    # with open(keep, 'w') as o:
-    #     o.writelines(meta)
+    # create the metadata yaml file
+    now = datetime.now()
+    stamp = now.strftime("%d-%b-%Y %H:%M:%S")
+    login = pwd.getpwuid(os.getuid())[0]
+    yaml = archive + os.sep + repo + '.yaml'
+    if not os.path.exists(yaml):
+        meta = f"# KAS repository {repo} metadata\n" \
+               f"# Created: {stamp} by {login}\n" \
+               f"flavor: {flavor}\n" \
+               f"url: {url}\n" \
+               f"repo: {repo}\n" \
+               f"name: {name}\n" \
+               f"token: {token}\n" \
+               f"private: {is_private}\n"
+        with open(yaml, 'w') as o:
+            o.writelines(meta)
+
+    # create the txt list of files & directories file
+    file = archive + os.sep + repo + '.txt'
+    if not os.path.exists(file):
+        text = f"# KAS repository {repo} list of files and directories\n" \
+               f"# Created: {stamp} by {login}\n\n"
+        with open(file, 'w') as t:
+            t.writelines(text)
 
 
 # ------- collect -------
 def collect():
+    global archive, index, repo
+
     print('action: collect')
+    repo = ''
+
+    try:
+        options = 'r:'
+        long_opts = ['repo=']
+        opts, args = getopt.getopt(sys.argv[index:], options, long_opts)
+    except getopt.error as msg:
+        print(f"ERROR: {msg}")
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt in ('-r', '--repo'):
+            repo = arg
+        else:
+            print(f"ERROR: unknown create option: " + opt)
+            sys.exit(2)
+
+    # sanity checks
+    if len(repo) == 0:
+        repo = getpass.getuser() + '_' + sys.platform
+        print(f" ! repo name not specified, using default: {repo}")
+
+    import local
+    local.collect(archive, repo)
 
 
 # ------- commit -------
@@ -193,7 +232,6 @@ if __name__ == '__main__':
 
     cmd = '-'
     if len(sys.argv) > index:
-
         # get the command
         cmd = sys.argv[index]
         index += 1

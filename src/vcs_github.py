@@ -1,6 +1,5 @@
 # vcs_github.py - KAS version control functions for GitHub
 
-import getpass
 import os
 import pwd
 import shutil
@@ -9,23 +8,30 @@ import subprocess
 import sys
 from datetime import datetime
 
+import yaml
+
 from github import Github
 
 
 # ------- create -------
 def create(archive, repo, flavor, url, name, token, is_private):
+    now = datetime.now()
+    stamp = now.strftime("%d-%b-%Y %H:%M:%S")
+    login = pwd.getpwuid(os.getuid())[0]
+    target = archive + os.sep + repo
+
     # make sure git is available
     path = shutil.which('git')
     if len(path) < 1:
         print('ERROR: cannot find git')
         sys.exit(1)
 
-    # change to the kas archive root directory
-    os.chdir(archive)
+    # change to the kas target root directory
+    os.chdir(target)
 
     # init the git repo if it does not exist
     created = False
-    if not os.path.exists(archive + os.sep + ".git"):
+    if not os.path.exists(target + os.sep + ".git"):
         print(" + ", end='', flush=True)
         result = subprocess.run(["git", "init"])
         if result.returncode != 0:
@@ -36,14 +42,11 @@ def create(archive, repo, flavor, url, name, token, is_private):
         print(f" = local repo {repo} already exists")
 
     # create a README.md if it does not exist
-    path = archive + os.sep + "README.md"
+    path = target + os.sep + "README.md"
     if not os.path.exists(path):
-        now = datetime.now()
-        stamp = now.strftime("%d-%b-%Y %H:%M:%S")
-        text = f"# KAS - Knobs And Scripts archive\n" \
-               f"Created: {stamp} by {pwd.getpwuid(os.getuid())[0]}<br/>\n" \
+        text = f"# KAS - Knobs And Scripts repository\n" \
+               f"Created: {stamp} by {login}<br/>\n" \
                f"Host: {socket.gethostname()}\n"
-
         with open(path, 'w') as o:
             o.writelines(text)
         print(f" + created new README.md")
@@ -61,7 +64,7 @@ def create(archive, repo, flavor, url, name, token, is_private):
         text = "KAS initial commit"
     else:
         text = "KAS commit"
-    result = subprocess.run(["git", "commit", "-m", text])
+    subprocess.run(["git", "commit", "-m", text])  # ignore any errors
 
     # set the branch name to default main
     print(' = Attempting to set branch name to main')
@@ -80,6 +83,7 @@ def create(archive, repo, flavor, url, name, token, is_private):
                 print(f"ERROR: GitHub repo {repo} already exists")
                 sys.exit(2)
 
+        print(f"Attempting to create repo '{repo}' on GitHub")
         user = g.get_user()
         added = user.create_repo(repo, 'KAS repository', '', is_private)
         origin = added.clone_url
@@ -100,21 +104,31 @@ def create(archive, repo, flavor, url, name, token, is_private):
     source = 'https://' + token + '@github.com/' + name + '/' + repo + '.git'
 
     # push set upstream branch
-    print(' = Attempting to set upstream branch')
-    result = subprocess.run(["git", "push", "--set-upstream", source, "main"])
-    if result.returncode != 0:
-        print(f"ERROR: {result.stdout}")
-        sys.exit(3)
-
-    # push local repo to remote
     print(' = Attempting to push')
-    result = subprocess.run(["git", "push", source, "--all"])
+    result = subprocess.run(["git", "push", "--set-upstream", source, "main"])
     if result.returncode != 0:
         print(f"ERROR: {result.stdout}")
         sys.exit(3)
 
 # To update repo:
 #   git add [file]
-#   git commit -m 'messsage'
-#   git push 'https://d1899d621920279cbef026245e1c31a93c5a8f3e@github.com/GrayHillDocuments/Clavius.git' --all
-#   git push --set-upstream 'https://d1899d621920279cbef026245e1c31a93c5a8f3e@github.com/GrayHillDocuments/Clavius.git' main
+#   git commit -m 'message'
+#   git push
+
+# ------- read_meta -------
+def read_meta(archive, repo):
+    file = archive + os.sep + repo + '.yaml'
+    if not os.path.exists(file):
+        print(f"ERROR: cannot find repo metadata file: {file}")
+        sys.exit(3)
+
+    print(f" = Reading metadata: {file}")
+    with open(file) as m:
+        meta = yaml.load(m, Loader=yaml.FullLoader)
+
+    print(meta.get('flavor'))
+    print(meta.get('url'))
+    print(meta.get('repo'))
+    print(meta.get('name'))
+    print(meta.get('token'))
+    print(meta.get('private'))
