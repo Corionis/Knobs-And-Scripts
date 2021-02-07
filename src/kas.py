@@ -189,6 +189,7 @@ def setup():
     global index
 
     print('action: setup')
+    # todo change to standard parsing with -r|--repo
     if len(sys.argv) > index:
         arc = sys.argv[index]
         index += 1
