@@ -171,7 +171,33 @@ def commit():
 
 # ------- distribute -------
 def distribute():
+    global archive, index, repo
+
     print('action: distribute')
+    repo = ''
+
+    try:
+        options = 'r:'
+        long_opts = ['repo=']
+        opts, args = getopt.getopt(sys.argv[index:], options, long_opts)
+    except getopt.error as msg:
+        print(f"ERROR: {msg}")
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt in ('-r', '--repo'):
+            repo = arg
+        else:
+            print(f"ERROR: unknown create option: " + opt)
+            sys.exit(2)
+
+    # sanity checks
+    if len(repo) == 0:
+        repo = getpass.getuser() + '_' + sys.platform
+        print(f" ! repo name not specified, using default: {repo}")
+
+    import local
+    local.distribute(archive, repo)
 
 
 # ------- pull -------
