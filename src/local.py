@@ -53,27 +53,26 @@ def distribute(archive, repo):
         print(f"ERROR: archive not found: {source}")
         sys.exit(3)
 
+    # process root of archive here; subdirectories are handled by distribute_directory()
     print(f" = Reading archive: {source}")
     contents = listdir(source)
     for item in contents:
-        if item == 'README.md' or item == '.git':
+        if item == 'README.md' or item == '.git':  # only in root of archive
             continue
 
         src = os.path.join(source, item)
         dest = f"{os.sep}{item}"
         if os.path.isfile(src) or os.path.islink(src):
-            print("")
-
+            distribute_file(src, dest)
         elif os.path.isdir(src):
-            print("")
-
+            distribute_directory(src, dest)
         else:
             print(f" ! UNKNOWN {src}")
 
 
 # ======= functions ==========================================
 
-# ------- copy -------
+# ------- collect_item -------
 def collect_item(src, target):
     if os.path.exists(src):
 
@@ -88,7 +87,7 @@ def collect_item(src, target):
         elif os.path.isdir(src):
             collect_directory(src, target)
 
-        elif os.path.islink(src):                       # todo remove this after links are tested
+        elif os.path.islink(src):  # todo remove this after links are tested
             print(f" ! LINK NOT HANDLED: {src}")
 
         else:
@@ -127,6 +126,25 @@ def collect_file(src, target):
     os.chmod(dest, sa.st_mode)
 
 
+# ------- distribute_directory -------
+def distribute_directory(src, dest):
+    dest = make_target_subdirectory(src, dest)
+    print(f" D {src} => {dest} ")
+
+    contents = listdir(src)
+    for item in contents:
+        path = os.path.join(src, item)
+        if os.path.isfile(path):
+            distribute_file(path, dest)
+        elif os.path.isdir(path):
+            dest = dest + os.sep + item
+            distribute_directory(path, dest)
+        elif os.path.islink(path):
+            print(f" ! LINK NOT HANDLED: {path}")
+        else:
+            print(f" ! UNKNOWN {path}")
+
+
 # ------- distribute_file -------
 def distribute_file(src, dest):
     print(f" F {src} => {dest} ")
@@ -155,10 +173,24 @@ def make_archive_subdirectories(target, folder):
         if not os.path.exists(tp):
             os.makedirs(tp)
 
-        # set ownership & permissions
+        # always (re)set ownership & permissions
         os.chown(tp, sa.st_uid, sa.st_gid)
         os.chmod(tp, sa.st_mode)
 
     return tp
+
+
+# ------- make_target_subdirectory -------
+def make_target_subdirectory(source, target):
+    sa = os.stat(source, follow_symlinks=False)
+
+    if not os.path.exists(target):
+        os.makedirs(target)
+
+        # only set ownership & permissions if created
+        os.chown(target, sa.st_uid, sa.st_gid)
+        os.chmod(target, sa.st_mode)
+
+    return target
 
 # end

@@ -27,7 +27,6 @@ def banner():
 
 # ------- create -------
 # kas create [-g|--git|-h|--github] [-p|--private] [-u|--url url] [-n|--name username] [-t|--token token] [-r repo]
-# create --github --private --url https://github.com/Corionis --name Corionis --token 403bcc6e36124089eaed056b4cfe15b1a7609605 --repo Clavius
 def create():
     global archive, flavor, index, repo, url, versioned
 
@@ -125,15 +124,16 @@ def create():
             o.writelines(meta)
 
     # create the txt list of files & directories file
-    file = archive + os.sep + repo + '.txt'
-    if not os.path.exists(file):
+    ctrl = archive + os.sep + repo + '.txt'
+    if not os.path.exists(ctrl):
         text = f"# KAS repository {repo} list of files and directories\n" \
                f"# Created: {stamp} by {login}\n\n"
-        with open(file, 'w') as t:
+        with open(ctrl, 'w') as t:
             t.writelines(text)
 
 
 # ------- collect -------
+# kas collect [-r repo]
 def collect():
     global archive, index, repo
 
@@ -170,6 +170,7 @@ def commit():
 
 
 # ------- distribute -------
+# kas distribute [-r repo]
 def distribute():
     global archive, index, repo
 
@@ -300,5 +301,7 @@ if __name__ == '__main__':
     else:
         usage()
 
-print()
+print('done')
+
+
 # end
