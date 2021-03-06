@@ -4,6 +4,7 @@ import getopt
 import getpass
 import os
 import pwd
+import signal
 import sys
 from datetime import datetime
 
@@ -37,8 +38,13 @@ def create():
     url = ''
     name = ''
     token = ''
+    token_prompted = False
     repo = ''
     vcs = None
+
+    now = datetime.now()
+    stamp = now.strftime("%d-%b-%Y %H:%M:%S")
+    login = pwd.getpwuid(os.getuid())[0]
 
     try:
         #noinspection SpellCheckingInspection
@@ -74,7 +80,10 @@ def create():
     if is_git and is_github:
         print("ERROR: can only use --git or --github, not both")
         sys.exit(2)
+
     if is_git or is_github:
+        import vcs_github as vcs
+        versioned = True
         if len(url) == 0:
             print("ERROR: --url required")
             sys.exit(2)
@@ -82,13 +91,12 @@ def create():
             print("ERROR: --name required")
             sys.exit(2)
         if len(token) == 0:
-            print("ERROR: --token required")
-            sys.exit(2)
-        import vcs_github as vcs
-        versioned = True
+            token_prompted = True
+            token = vcs.prompt_token()
+
     if is_private and not is_github:
-        print("ERROR: --private is only used wit --github")
-        sys.exit(2)
+        print("WARNING: --private is only used wit --github")
+
     if len(repo) == 0:
         repo = getpass.getuser() + '_' + sys.platform
         print(f" ! repo name not specified, using default: {repo}")
@@ -101,6 +109,17 @@ def create():
     else:
         print(f" = archive directory exists: {target}")
 
+    # create a README.md if it does not exist
+    path = target + os.sep + "README.md"
+    if not os.path.exists(path):
+        text = f"# KAS - Knobs And Scripts repository\n" \
+               f"### Created: {stamp} by {login}<br/>\n" \
+               f"#### Place fully-qualified file paths and/or directories below these comments.<br/>\n" \
+               f"#### Blank lines and lines beginning with # are ignored.<br/>\n\n"
+        with open(path, 'w') as o:
+            o.writelines(text)
+        print(f" + created new README.md")
+
     # create the git or github repo
     if versioned:
         print(f" = vcs type: {flavor}")
@@ -112,24 +131,19 @@ def create():
     login = pwd.getpwuid(os.getuid())[0]
     yaml = archive + os.sep + repo + '.yaml'
     if not os.path.exists(yaml):
+        text = ''
+        if not token_prompted:
+            text = token
         meta = f"# KAS repository {repo} metadata\n" \
                f"# Created: {stamp} by {login}\n" \
                f"flavor: {flavor}\n" \
                f"url: {url}\n" \
                f"repo: {repo}\n" \
                f"name: {name}\n" \
-               f"token: {token}\n" \
+               f"token: {text}\n" \
                f"private: {is_private}\n"
         with open(yaml, 'w') as o:
             o.writelines(meta)
-
-    # create the txt list of files & directories file
-    ctrl = archive + os.sep + repo + '.txt'
-    if not os.path.exists(ctrl):
-        text = f"# KAS repository {repo} list of files and directories\n" \
-               f"# Created: {stamp} by {login}\n\n"
-        with open(ctrl, 'w') as t:
-            t.writelines(text)
 
 
 # ------- collect -------
@@ -213,16 +227,28 @@ def push():
 
 # ------- setup -------
 def setup():
-    global index
+    global repo
 
     print('action: setup')
-    # todo change to standard parsing with -r|--repo
-    if len(sys.argv) > index:
-        arc = sys.argv[index]
-        index += 1
-    else:
-        arc = os.path.expanduser('~') + os.sep + 'kas-archive'
-        print(f" ! archive directory not specified, using default: {arc}")
+
+    try:
+        options = 'r:'
+        long_opts = ['repo=']
+        opts, args = getopt.getopt(sys.argv[index:], options, long_opts)
+    except getopt.error as msg:
+        print(f"ERROR: {msg}")
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt in ('-r', '--repo'):
+            repo = arg
+        else:
+            print(f"ERROR: unknown create option: " + opt)
+            sys.exit(2)
+
+    if len(repo) < 1:
+        repo = os.path.expanduser('~') + os.sep + 'kas-archive'
+        print(f" ! repo directory not specified, using default: {repo}")
 
     if len(archive) > 0:
         answer = input(f"archive {archive} is already setup. Do you want to change it (y/N)? ")
@@ -230,7 +256,13 @@ def setup():
         if not answer == 'y':
             return
 
-    cfg.setup(arc)
+    cfg.setup(repo)
+
+
+# ------- signal_handler -------
+def signal_handler(sig, frame):
+    print(f"\nExiting ELS\n")
+    sys.exit(0)
 
 
 # ------- usage -------
@@ -249,6 +281,10 @@ if __name__ == '__main__':
     flavor = 'none'
     version = 1.0
     versioned = False
+
+    signal.signal(signal.SIGINT, signal_handler)
+    #print('Press Ctrl+C')
+    #signal.pause()
 
     # get the base executable directory
     base = os.path.dirname(__file__)
@@ -300,8 +336,5 @@ if __name__ == '__main__':
             usage()
     else:
         usage()
-
-print('done')
-
 
 # end

@@ -1,12 +1,9 @@
-# vcs_github.py - KAS version control functions for GitHub
+# vcs_github.py - Version control functions for GitHub
 
 import os
-import pwd
 import shutil
-import socket
 import subprocess
 import sys
-from datetime import datetime
 
 import yaml
 
@@ -15,9 +12,6 @@ from github import Github
 
 # ------- create -------
 def create(archive, repo, flavor, url, name, token, is_private):
-    now = datetime.now()
-    stamp = now.strftime("%d-%b-%Y %H:%M:%S")
-    login = pwd.getpwuid(os.getuid())[0]
     target = archive + os.sep + repo
 
     # make sure git is available
@@ -41,18 +35,9 @@ def create(archive, repo, flavor, url, name, token, is_private):
     else:
         print(f" = local repo {repo} already exists")
 
-    # create a README.md if it does not exist
-    path = target + os.sep + "README.md"
-    if not os.path.exists(path):
-        text = f"# KAS - Knobs And Scripts repository\n" \
-               f"Created: {stamp} by {login}<br/>\n" \
-               f"Host: {socket.gethostname()}\n"
-        with open(path, 'w') as o:
-            o.writelines(text)
-        print(f" + created new README.md")
-
     # add README.md
     print(' = Attempting to add README.md')
+    path = target + os.sep + "README.md"
     result = subprocess.run(["git", "add", path])
     if result.returncode != 0:
         print(f"ERROR: {result.stdout}")
@@ -116,8 +101,8 @@ def create(archive, repo, flavor, url, name, token, is_private):
 #   git commit -m 'message'
 #   git push
 
-# ------- read_meta -------
-def read_meta(archive, repo):
+# ------- dumb_meta -------
+def dumb_meta(archive, repo):
     file = archive + os.sep + repo + '.yaml'
     if not os.path.exists(file):
         print(f"ERROR: cannot find repo metadata file: {file}")
@@ -133,3 +118,13 @@ def read_meta(archive, repo):
     print(meta.get('name'))
     print(meta.get('token'))
     print(meta.get('private'))
+
+
+# ------- prompt_token -------
+def prompt_token():
+    print(" ? Enter git/GitHub access token:")
+    answer = input(' : ')
+    return answer
+
+
+# end

@@ -1,4 +1,4 @@
-# cfg.py - KAS configuration
+# local.py - Local file and directory operations
 
 import os
 import sys
@@ -10,7 +10,7 @@ from shutil import copy2
 
 # ------- collect -------
 def collect(archive, repo):
-    file = archive + os.sep + repo + '.txt'
+    file = archive + os.sep + repo + os.sep + "README.md"
     if not os.path.exists(file):
         print(f"ERROR: cannot find list of files and directories for repo: {file}")
         sys.exit(3)
@@ -68,6 +68,8 @@ def distribute(archive, repo):
             distribute_directory(src, dest)
         else:
             print(f" ! UNKNOWN {src}")
+
+    print(' = Done')
 
 
 # ======= functions ==========================================
@@ -135,10 +137,11 @@ def distribute_directory(src, dest):
     for item in contents:
         path = os.path.join(src, item)
         if os.path.isfile(path):
-            distribute_file(path, dest)
+            target = dest + os.sep + item
+            distribute_file(path, target)
         elif os.path.isdir(path):
-            dest = dest + os.sep + item
-            distribute_directory(path, dest)
+            target = dest + os.sep + item
+            distribute_directory(path, target)
         elif os.path.islink(path):
             print(f" ! LINK NOT HANDLED: {path}")
         else:
@@ -188,9 +191,11 @@ def make_target_subdirectory(source, target):
         os.makedirs(target)
 
         # only set ownership & permissions if created
+        print(f"SETTING PERMISSIONS, on {target} mode {sa.st_mode}")
         os.chown(target, sa.st_uid, sa.st_gid)
         os.chmod(target, sa.st_mode)
 
     return target
+
 
 # end
