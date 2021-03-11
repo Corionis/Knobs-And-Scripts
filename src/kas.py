@@ -21,10 +21,75 @@ global version  # this executable version
 global versioned  # is a vcs being used, True/False
 
 
-# ------- banner -------
-def banner():
-    print(f"KAS: Knobs And Scripts, version {version}")
+# ------- collect -------
+# kas collect [-r repo]
+def collect():
+    global archive, index, repo
 
+    print('action: collect')
+    repo = ''
+
+    try:
+        options = 'r:'
+        long_opts = ['repo=']
+        opts, args = getopt.getopt(sys.argv[index:], options, long_opts)
+    except getopt.error as msg:
+        print(f"ERROR: {msg}")
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt in ('-r', '--repo'):
+            repo = arg
+        else:
+            print(f"ERROR: unknown option: " + opt)
+            sys.exit(2)
+
+    # sanity checks
+    if len(repo) == 0:
+        repo = getpass.getuser() + '_' + sys.platform
+        print(f" ! repo name not specified, using default: {repo}")
+
+    import local
+    local.collect(archive, repo)
+
+
+# ------- commit -------
+def commit():
+    global archive, index, repo
+
+    print('action: commit')
+    repo = ''
+
+    try:
+        options = 'r:'
+        long_opts = ['repo=']
+        opts, args = getopt.getopt(sys.argv[index:], options, long_opts)
+    except getopt.error as msg:
+        print(f"ERROR: {msg}")
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt in ('-r', '--repo'):
+            repo = arg
+        else:
+            print(f"ERROR: unknown option: " + opt)
+            sys.exit(2)
+
+    # sanity checks
+    if len(repo) == 0:
+        repo = getpass.getuser() + '_' + sys.platform
+        print(f" ! repo name not specified, using default: {repo}")
+
+    target = archive + os.sep + repo
+    if not os.path.exists(target):
+        print(f"ERROR: repo {target} not found")
+        sys.exit(3)
+    if not os.path.exists(target + os.sep + ".git"):
+        print(f"ERROR: repo {target} is not a git or GitHub repo")
+        sys.exit(3)
+
+    import vcs_github as vcs
+    vcs.commit(target)
 
 # ------- create -------
 # kas create [-g|--git|-h|--github] [-p|--private] [-u|--url url] [-n|--name username] [-t|--token token] [-r repo]
@@ -73,7 +138,7 @@ def create():
         elif opt in ('-r', '--repo'):
             repo = arg
         else:
-            print(f"ERROR: unknown create option: " + opt)
+            print(f"ERROR: unknown option: " + opt)
             sys.exit(2)
 
     # sanity checks
@@ -126,8 +191,6 @@ def create():
         vcs.create(archive, repo, flavor, url, name, token, is_private)
 
     # create the metadata yaml file
-    now = datetime.now()
-    stamp = now.strftime("%d-%b-%Y %H:%M:%S")
     login = pwd.getpwuid(os.getuid())[0]
     yaml = archive + os.sep + repo + '.yaml'
     if not os.path.exists(yaml):
@@ -144,43 +207,6 @@ def create():
                f"private: {is_private}\n"
         with open(yaml, 'w') as o:
             o.writelines(meta)
-
-
-# ------- collect -------
-# kas collect [-r repo]
-def collect():
-    global archive, index, repo
-
-    print('action: collect')
-    repo = ''
-
-    try:
-        options = 'r:'
-        long_opts = ['repo=']
-        opts, args = getopt.getopt(sys.argv[index:], options, long_opts)
-    except getopt.error as msg:
-        print(f"ERROR: {msg}")
-        sys.exit(1)
-
-    for opt, arg in opts:
-        if opt in ('-r', '--repo'):
-            repo = arg
-        else:
-            print(f"ERROR: unknown create option: " + opt)
-            sys.exit(2)
-
-    # sanity checks
-    if len(repo) == 0:
-        repo = getpass.getuser() + '_' + sys.platform
-        print(f" ! repo name not specified, using default: {repo}")
-
-    import local
-    local.collect(archive, repo)
-
-
-# ------- commit -------
-def commit():
-    print('action: commit')
 
 
 # ------- distribute -------
@@ -203,7 +229,7 @@ def distribute():
         if opt in ('-r', '--repo'):
             repo = arg
         else:
-            print(f"ERROR: unknown create option: " + opt)
+            print(f"ERROR: unknown option: " + opt)
             sys.exit(2)
 
     # sanity checks
@@ -213,16 +239,6 @@ def distribute():
 
     import local
     local.distribute(archive, repo)
-
-
-# ------- pull -------
-def pull():
-    print('action: pull')
-
-
-# ------- push -------
-def push():
-    print('action: push')
 
 
 # ------- setup -------
@@ -243,7 +259,7 @@ def setup():
         if opt in ('-r', '--repo'):
             repo = arg
         else:
-            print(f"ERROR: unknown create option: " + opt)
+            print(f"ERROR: unknown option: " + opt)
             sys.exit(2)
 
     if len(repo) < 1:
@@ -261,8 +277,49 @@ def setup():
 
 # ------- signal_handler -------
 def signal_handler(sig, frame):
+    sig = None
+    frame = None
     print(f"\nExiting ELS\n")
     sys.exit(0)
+
+
+# ------- update -------
+def update():
+    global archive, index, repo
+
+    print('action: update')
+    repo = ''
+
+    try:
+        options = 'r:'
+        long_opts = ['repo=']
+        opts, args = getopt.getopt(sys.argv[index:], options, long_opts)
+    except getopt.error as msg:
+        print(f"ERROR: {msg}")
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt in ('-r', '--repo'):
+            repo = arg
+        else:
+            print(f"ERROR: unknown option: " + opt)
+            sys.exit(2)
+
+    # sanity checks
+    if len(repo) == 0:
+        repo = getpass.getuser() + '_' + sys.platform
+        print(f" ! repo name not specified, using default: {repo}")
+
+    target = archive + os.sep + repo
+    if not os.path.exists(target):
+        print(f"ERROR: repo {target} not found")
+        sys.exit(3)
+    if not os.path.exists(target + os.sep + ".git"):
+        print(f"ERROR: repo {target} is not a git or GitHub repo")
+        sys.exit(3)
+
+    import vcs_github as vcs
+    vcs.update(target)
 
 
 # ------- usage -------
@@ -282,6 +339,7 @@ if __name__ == '__main__':
     version = 1.0
     versioned = False
 
+    # add a signal handler for graceful exit
     signal.signal(signal.SIGINT, signal_handler)
     #print('Press Ctrl+C')
     #signal.pause()
@@ -291,7 +349,7 @@ if __name__ == '__main__':
     base = os.path.dirname(base)
     base = os.path.abspath(base)
 
-    banner()
+    print(f"KAS: Knobs And Scripts, version {version}")
     print(f" = base: {base}")
 
     cmd = '-'
@@ -316,14 +374,10 @@ if __name__ == '__main__':
 
         # vcs commands -------
         print()
-        if cmd == 'create':
-            create()
-        elif cmd == 'pull':
-            pull()
-        elif cmd == 'commit':
+        if cmd == 'commit':
             commit()
-        elif cmd == 'push':
-            push()
+        elif cmd == 'create':
+            create()
         # kas commands -------
         elif cmd == 'collect':
             collect()
@@ -331,6 +385,8 @@ if __name__ == '__main__':
             distribute()
         elif cmd == 'setup':
             setup()
+        elif cmd == 'update':
+            update()
         else:
             print(f"ERROR: unknown action: {cmd}")
             usage()
