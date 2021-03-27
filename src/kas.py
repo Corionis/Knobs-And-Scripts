@@ -22,7 +22,7 @@ global versioned  # is a vcs being used, True/False
 
 
 # ------- collect -------
-# kas collect [-r repo]
+# kas collect [-r|--repo repo]
 def collect():
     global archive, index, repo
 
@@ -54,21 +54,25 @@ def collect():
 
 
 # ------- commit -------
+# kas commit  [-m message] [-r|--repo repo]
 def commit():
     global archive, index, repo
 
     print('action: commit')
+    message = ''
     repo = ''
 
     try:
-        options = 'r:'
-        long_opts = ['repo=']
+        options = 'm:r:'
+        long_opts = ['message=', 'repo=']
         opts, args = getopt.getopt(sys.argv[index:], options, long_opts)
     except getopt.error as msg:
         print(f"ERROR: {msg}")
         sys.exit(1)
 
     for opt, arg in opts:
+        if opt in ('-m', '--message'):
+            message = arg
         if opt in ('-r', '--repo'):
             repo = arg
         else:
@@ -89,10 +93,10 @@ def commit():
         sys.exit(3)
 
     import vcs_github as vcs
-    vcs.commit(target)
+    vcs.commit(target, message)
 
 # ------- create -------
-# kas create [-g|--git|-h|--github] [-p|--private] [-u|--url url] [-n|--name username] [-t|--token token] [-r repo]
+# kas create [-g|--git|-h|--github] [-p|--private] [-t|--token token] [-u|--url url] [-n|--name username] [-r|--repo repo]
 def create():
     global archive, flavor, index, repo, url, versioned
 
@@ -242,21 +246,22 @@ def distribute():
 
 
 # ------- setup -------
+# kas setup -a|--archive directory
 def setup():
     global repo
 
     print('action: setup')
 
     try:
-        options = 'r:'
-        long_opts = ['repo=']
+        options = 'a:'
+        long_opts = ['archive=']
         opts, args = getopt.getopt(sys.argv[index:], options, long_opts)
     except getopt.error as msg:
         print(f"ERROR: {msg}")
         sys.exit(1)
 
     for opt, arg in opts:
-        if opt in ('-r', '--repo'):
+        if opt in ('-a', '--archive'):
             repo = arg
         else:
             print(f"ERROR: unknown option: " + opt)
@@ -284,6 +289,7 @@ def signal_handler(sig, frame):
 
 
 # ------- update -------
+# kas update -r [repo]
 def update():
     global archive, index, repo
 
@@ -325,7 +331,47 @@ def update():
 # ------- usage -------
 def usage():
     print()
-    print("usage")
+    #      -------------------------------------------------------------------------------
+    print("usage:")
+    print("  kas command options")
+    print("  ")
+    print("where command is one of:")
+    print("  collect [-r|--repo repo]")
+    print("  ")
+    print("  Collect local files based on those listed in -r|--repo repo/README.md and")
+    print("  copy them to the archive directory.")
+    print("   * optionally specify the repo name, default: user_platform, e.g. billy_linux")
+    print("  ---")
+    print("  commit [-r|--repo repo]")
+    print("  ")
+    print("  Add all archive files in -r|--repo repo and commit them to the git/GitHub.")
+    print("   * optionally specify the repo name, default: user_platform, e.g. billy_linux")
+    print("  ---")
+    print("  create [-g|--git|-h|--github] [-p|--private] [-t|--token token] [-u|--url url]")
+    print("  [-n|--name username] [-r|--repo repo]")
+    print("  ")
+    print("  Create a repo in the archive directory.")
+    print("   * optionally create the repo for -g|--git or -h|--github.")
+    print("   * optionally make the git/GitHub repo -p|--private, default: public.")
+    print("   * optionally set the -t|--token to access git/GitHub repo, default: prompt")
+    print("   * for git/GitHub specify the -u|--url to git/GitHub.")
+    print("   * for git/GitHub specify the -n|--name username.")
+    print("   * optionally specify the repo name, default: user_platform, e.g. billy_linux")
+    print("  ---")
+    print("  distribute [-r|--repo repo]")
+    print("  ")
+    print("  Distribute archive files in -r|--repo repo copy files to the system.")
+    print("   * optionally specify the repo name, default: user_platform, e.g. billy_linux")
+    print("  ---")
+    print("  setup -a|--archive directory")
+    print("  ")
+    print("  Set up a ~/.kas file with the directory as the KAS -a|--archive directory.")
+    print("  ---")
+    print("  update [-r|--repo repo]")
+    print("  ")
+    print("  Update -r|--repo repo from git/GitHub.")
+    print("   * optionally specify the repo name, default: user_platform, e.g. billy_linux")
+    print("  ")
     sys.exit(1)
 
 
@@ -387,6 +433,8 @@ if __name__ == '__main__':
             setup()
         elif cmd == 'update':
             update()
+        elif cmd == 'help':
+            usage()
         else:
             print(f"ERROR: unknown action: {cmd}")
             usage()

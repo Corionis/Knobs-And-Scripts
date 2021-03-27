@@ -99,7 +99,7 @@ def create(archive, repo, flavor, url, name, token, is_private):
 
 
 # ------- commit -------
-def commit(target):
+def commit(target, message):
     # make sure git is available
     path = shutil.which('git')
     if len(path) < 1:
@@ -116,7 +116,10 @@ def commit(target):
         sys.exit(3)
 
     print(' = Attempting to commit')
-    result = subprocess.run(["git", "commit", "-m", "KAS commit", target], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if len(message) < 1:
+        message = "KAS commit"
+
+    result = subprocess.run(["git", "commit", "-m", message, target], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
         o = str(result.stdout)
         if o.count('nothing to commit') == 0:
