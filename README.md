@@ -8,3 +8,5 @@ KAS uses a local
 directory to save a list of files and/or directories along with 
 their paths and permissions. That directory 
 may optionally be versioned to a git or GitHub repository.
+
+See the [Knobs And Scripts wiki](https://github.com/Corionis/Knobs-And-Scripts/wiki) for more information and downloads.
