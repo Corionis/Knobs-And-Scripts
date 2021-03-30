@@ -21,11 +21,11 @@ The current version of KAS is: **1.0.0.**
  * Latest build, software only: [kas](../blob/master/deploy/kas?raw=true)
  * Latest build, in Zip archive: [kas.zip](../blob/master/deploy/kas.zip?raw=true)
 
-KAS is written in Python 3.8.5 and has been tested on Linux Mint 20 and CentOS.
+KAS is written in Python 3.8.5. The executable is compiled with all the
+necessary libraries. It has been tested on Linux Mint 20 and CentOS.
 
 # Installation
 
- 1. Download one of the two files above. Umzip if necessary.
+ 1. Download one of the two files above. Unzip if necessary.
  2. Copy/move the kas executable to a directory on your PATH.
-    1. An "els" directory will be created from the zip.
- 3. Make sure kas is executable:  `chmod 775 kas`
+ 3. Make sure the kas file is executable:  `chmod 775 kas`

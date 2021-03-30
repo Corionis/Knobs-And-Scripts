@@ -16,6 +16,10 @@ user. The list is kept in a README.md file located in the root of the
 specified repo directory. An initial README.md is created when the 
 repo is created.
 
+For example:
+
+![directory example](https://github.com/Corionis/Knobs-And-Scripts/blob/master/artifacts/images/tree.png "Archive directory example")
+
 ### Setup Commands
 
  * setup - Required first step to create a ~/.kas file defining the
@@ -34,7 +38,7 @@ repo is created.
 
 ### Repository Commands
 
- * commit - Commit the content of a repo directory to a git or GitHub
+ * commit - Commit and push the content of a repo directory to a git or GitHub
    repository.
    
  * update - Update a repo directory from the associated git or GitHub
@@ -63,7 +67,8 @@ another computer then be sure the `[directory path]` used with the
 *setup* command matches that location.
 
 Note the permissions of the existing items are used during the
-*distribute* command.
+*distribute* command. To move or copy a KAS archive directory to
+another system use *tar* to capture the ownership and permissions.
 
 ### Creating a New Archive Directory
 

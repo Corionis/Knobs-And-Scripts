@@ -1,6 +1,6 @@
 KAS has several commands each with their own options.
 
-For the versioning options command-line git must be available.
+For the versioning options command-line git must be installed.
 
 ## Command Line Options
 
@@ -16,7 +16,7 @@ The options for short- and long-versions are case-sensitive.
 
  * commit [-r|--repo repo]
       
-   Add all repo files in -r|--repo *repo* and commit them to the git/GitHub.
+   Add all repo files in -r|--repo *repo* and commit them to git/GitHub.
    Optionally specify the repo name, default: user_platform, e.g. jack_linux
 
  * create [-g|--git|-h|--github] [-p|--private] [-t|--token token] [-u|--url url]
