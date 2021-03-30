@@ -14,11 +14,14 @@ within the archive directory.
 The list of specific files and directories is up to the administrator or
 user. The list is kept in a README.md file located in the root of the 
 specified repo directory. An initial README.md is created when the 
-repo is created.
+repo is created. A matching YAML file is created in the archive directory
+with the metadata needed.
 
-For example:
+For example, archve directory kas-archive with a repo named JackHome:
 
-![directory example](https://github.com/Corionis/Knobs-And-Scripts/blob/master/artifacts/images/tree.png "Archive directory example")
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![Archive directory example](https://github.com/Corionis/Knobs-And-Scripts/blob/main/artifacts/images/tree.png)
+
+Note the README.md file is *not* copied to the system during the distribute command.
 
 ### Setup Commands
 
@@ -86,4 +89,3 @@ are initialized and committed.
 kas create --github --private --url https://github.com --name JackFrost --repo MyKAS
 
 You will be prompted for the GitHub access token.
-
