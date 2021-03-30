@@ -86,6 +86,7 @@ Example of creating a KAS repo named MyKAS that is also a private
 GitHub repo owned by user JackFrost. The local and remote repositories 
 are initialized and committed.
 
-kas create --github --private --url https://github.com --name JackFrost --repo MyKAS
+kas create --github --private --url `https://github.com` --name JackFrost --repo MyKAS
 
 You will be prompted for the GitHub access token.
+
