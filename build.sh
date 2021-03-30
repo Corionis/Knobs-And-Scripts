@@ -11,3 +11,10 @@ if [ ! -d ${base}/deploy ]; then
 fi
 
 pyinstaller --onefile --windowed --distpath deploy --workpath out -y --clean -p src -p lib src/kas.py
+
+cd deploy
+if [ -e kas.zip ]; then
+  rm -f kas.zip
+fi
+zip kas.zip kas
+

@@ -10,7 +10,10 @@ to avoid any problems with browser download protections.
 
 # Disclaimer
 
-Any software downloaded from this site is free and without warranty or guarantee of any kind expressed or implied. The software may not work or serve any intended or particular purpose. Use at your own risk. If you break it you own both parts.
+Any software downloaded from this site is free and without warranty 
+or guarantee of any kind expressed or implied. The software may not 
+work or serve any intended or particular purpose. Use at your own 
+risk. If you break it you own both parts.
 
 # Downloads
 The current version of KAS is: **1.0.0.**
