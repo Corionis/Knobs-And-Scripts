@@ -14,5 +14,5 @@ echo ''
 cd src
 
 # Use this line instead to test prompting for the access token
-python3 kas.py create --github --private --url https://github.com --name GrayHillDocuments --repo Clavius
+python3 kas.py create --github --private --url https://github.com --name JackFrost --repo JackHome
 
